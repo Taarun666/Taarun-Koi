@@ -8,10 +8,6 @@ activity, as a looping GIF for a profile README.
   across its public, non-fork repositories).
 - **Swim speed** picks up with the day's contribution count.
 
-<p align="center">
-  <img src="docs/koi-preview.gif" width="336" alt="Example koi" />
-</p>
-
 ## Usage
 
 Copy [examples/profile-workflow.yml](examples/profile-workflow.yml) into your
@@ -50,6 +46,15 @@ The koi artwork itself (`assets/bodies-dark.png`) is reused from
 [yalongwastaken/git-koi](https://github.com/yalongwastaken/git-koi) under its
 MIT license — see [NOTICE.md](NOTICE.md). Everything else (the data
 collection, color/growth matching, and animation code) is original.
+
+An example of the source artist's own koi, and the sprite sheet this reuses:
+
+<p align="center">
+  <img src="assets/source-koi-example.gif" width="256" alt="Example koi from yalongwastaken/git-koi" />
+</p>
+<p align="center">
+  <img src="assets/bodies-dark.png" width="600" alt="The bodies-dark.png sprite sheet: six body colors across six growth stages" />
+</p>
 
 ## License
 

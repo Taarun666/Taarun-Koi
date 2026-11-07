@@ -28,6 +28,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+`assets/source-koi-example.gif` is `koi/koi.gif` from
+[yalongwastaken/yalongwastaken](https://github.com/yalongwastaken/yalongwastaken),
+Anthony Yalong's personal GitHub profile repository — shown here as an example
+of git-koi's own output. That repository carries no license file, so unlike
+`bodies-dark.png` above, this specific file is not under an open-source
+license; it is included with attribution to its author, not under a granted
+right to redistribute.
+
 Everything else in this repository (the collection, color-matching, growth,
 and animation code) is original and covered by this repository's own
 [LICENSE](LICENSE).
