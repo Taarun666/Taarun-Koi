@@ -1,0 +1,36 @@
+name: Taarun-Koi
+description: Draws a pixel-art koi from a GitHub account's public activity, as a looping GIF for a profile README.
+branding:
+  icon: droplet
+  color: blue
+
+inputs:
+  login:
+    description: Account whose koi to draw.
+    default: ${{ github.repository_owner }}
+  output-dir:
+    description: Folder, relative to the workspace, that receives koi.gif and preview.html.
+    default: koi
+  token:
+    description: Token for reading the account's public data; the built-in token is enough.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --omit=dev
+
+    - name: Draw the koi
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: node "${{ github.action_path }}/src/index.js"
