@@ -8,6 +8,25 @@ const { getLanguageColor, hexToRgb } = require("./colors");
 const SPRITE_SHEET = path.join(__dirname, "..", "assets", "bodies-dark.png");
 const OUTPUT_SIZE = 300;
 
+// The sheet is a documentation image with GitHub's dark-mode page color
+// (#0d1117) baked in as an opaque backdrop, not real transparency. Key it
+// out so the rendered GIF blends into the profile README on any theme.
+const BACKDROP = [13, 17, 23];
+const BACKDROP_TOLERANCE = 20;
+
+function keyOutBackdrop(rgba) {
+  const out = new Uint8Array(rgba);
+  for (let i = 0; i < out.length; i += 4) {
+    const dr = out[i] - BACKDROP[0];
+    const dg = out[i + 1] - BACKDROP[1];
+    const db = out[i + 2] - BACKDROP[2];
+    if (Math.sqrt(dr * dr + dg * dg + db * db) <= BACKDROP_TOLERANCE) {
+      out[i + 3] = 0;
+    }
+  }
+  return out;
+}
+
 function delayForActivity(todayContributions) {
   if (todayContributions <= 0) return 320;
   if (todayContributions < 4) return 200;
@@ -30,13 +49,22 @@ function shiftVertical(rgba, width, height, shiftPx) {
 }
 
 async function cropCell(row, col) {
-  const { data, info } = await sharp(SPRITE_SHEET)
+  const { data } = await sharp(SPRITE_SHEET)
     .extract({ left: col * CELL, top: row * CELL, width: CELL, height: CELL })
-    .resize(OUTPUT_SIZE, OUTPUT_SIZE)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
-  return { rgba: new Uint8Array(data.buffer, data.byteOffset, data.length), width: info.width, height: info.height };
+
+  const keyed = keyOutBackdrop(data);
+
+  const { data: resized, info } = await sharp(Buffer.from(keyed), {
+    raw: { width: CELL, height: CELL, channels: 4 },
+  })
+    .resize(OUTPUT_SIZE, OUTPUT_SIZE)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  return { rgba: new Uint8Array(resized.buffer, resized.byteOffset, resized.length), width: info.width, height: info.height };
 }
 
 async function renderKoi(snapshot, outputDir) {
