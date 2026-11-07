@@ -6,10 +6,15 @@
   "scripts": {
     "koi": "node src/index.js"
   },
-  "keywords": ["github-action", "profile-readme", "koi"],
+  "keywords": [
+    "github-action",
+    "profile-readme",
+    "koi"
+  ],
   "author": "Taarun",
   "license": "MIT",
   "dependencies": {
-    "gifenc": "^1.0.3"
+    "gifenc": "^1.0.3",
+    "sharp": "^0.35.5"
   }
 }

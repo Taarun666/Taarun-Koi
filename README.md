@@ -1,6 +1,6 @@
 # Taarun-Koi
 
-A GitHub Action that draws a pixel-art koi fish from a GitHub account's public
+A GitHub Action that draws a koi fish from a GitHub account's public
 activity, as a looping GIF for a profile README.
 
 - **Size** grows with the account's total public contributions.
@@ -38,12 +38,20 @@ immediately, rather than waiting for the nightly schedule.
 
 `src/collect.js` reads public data through the GitHub CLI (`gh`, preinstalled
 on GitHub-hosted runners): the account's daily contribution calendar, and the
-language byte totals across its public, non-fork repositories. `src/sprite.js`
-draws a fixed pixel-art koi shape; `src/render.js` scales it by total
-contributions, colors it by top language, and encodes a two-frame swimming
-loop as a GIF with [`gifenc`](https://www.npmjs.com/package/gifenc), timed by
-the day's contribution count.
+language byte totals across its public, non-fork repositories.
+`src/render.js` picks the sprite sheet cell whose body color is nearest the
+account's top language and whose column matches its contribution count,
+crops it with [`sharp`](https://www.npmjs.com/package/sharp), and encodes a
+two-frame bobbing loop as a GIF with
+[`gifenc`](https://www.npmjs.com/package/gifenc), timed by the day's
+contribution count.
+
+The koi artwork itself (`assets/bodies-dark.png`) is reused from
+[yalongwastaken/git-koi](https://github.com/yalongwastaken/git-koi) under its
+MIT license — see [NOTICE.md](NOTICE.md). Everything else (the data
+collection, color/growth matching, and animation code) is original.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT for this repository's own code. See [LICENSE](LICENSE) and, for the
+reused sprite sheet, [NOTICE.md](NOTICE.md).

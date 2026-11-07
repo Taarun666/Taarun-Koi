@@ -1,22 +1,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const sharp = require("sharp");
 const { GIFEncoder, quantize, applyPalette } = require("gifenc");
-const { buildKoiGrid, WIDTH, HEIGHT } = require("./sprite");
-const { getLanguageColor, hexToRgb, shade } = require("./colors");
+const { CELL, nearestRow, growthColumn } = require("./bodies");
+const { getLanguageColor, hexToRgb } = require("./colors");
 
-const GROWTH_STEPS = [
-  { max: 50, scale: 4 },
-  { max: 200, scale: 6 },
-  { max: 500, scale: 8 },
-  { max: 1000, scale: 10 },
-  { max: 2000, scale: 12 },
-  { max: Infinity, scale: 14 },
-];
-
-function scaleForContributions(totalContributions) {
-  const step = GROWTH_STEPS.find((s) => totalContributions < s.max);
-  return step.scale;
-}
+const SPRITE_SHEET = path.join(__dirname, "..", "assets", "bodies-dark.png");
+const OUTPUT_SIZE = 300;
 
 function delayForActivity(todayContributions) {
   if (todayContributions <= 0) return 320;
@@ -25,68 +15,51 @@ function delayForActivity(todayContributions) {
   return 70;
 }
 
-function colorForCell(cell, bodyColor) {
-  switch (cell) {
-    case "body":
-      return hexToRgb(bodyColor);
-    case "fin":
-    case "tail":
-      return shade(bodyColor, 0.7);
-    case "eye":
-      return [20, 20, 20];
-    case "outline":
-      return [25, 25, 25];
-    default:
-      return null; // transparent
+// Shifts an RGBA buffer vertically by `shiftPx`, filling revealed rows with
+// transparency, for a gentle two-frame swim bob.
+function shiftVertical(rgba, width, height, shiftPx) {
+  const out = new Uint8Array(rgba.length);
+  for (let y = 0; y < height; y++) {
+    const srcY = y - shiftPx;
+    if (srcY < 0 || srcY >= height) continue;
+    const srcStart = srcY * width * 4;
+    const dstStart = y * width * 4;
+    out.set(rgba.subarray(srcStart, srcStart + width * 4), dstStart);
   }
+  return out;
 }
 
-function drawFrame(grid, scale, bodyColor) {
-  const pxWidth = WIDTH * scale;
-  const pxHeight = HEIGHT * scale;
-  const rgba = new Uint8Array(pxWidth * pxHeight * 4);
-
-  for (let gy = 0; gy < HEIGHT; gy++) {
-    for (let gx = 0; gx < WIDTH; gx++) {
-      const color = colorForCell(grid[gy][gx], bodyColor);
-      for (let sy = 0; sy < scale; sy++) {
-        for (let sx = 0; sx < scale; sx++) {
-          const x = gx * scale + sx;
-          const y = gy * scale + sy;
-          const i = (y * pxWidth + x) * 4;
-          if (color) {
-            rgba[i] = color[0];
-            rgba[i + 1] = color[1];
-            rgba[i + 2] = color[2];
-            rgba[i + 3] = 255;
-          } else {
-            rgba[i + 3] = 0; // transparent background
-          }
-        }
-      }
-    }
-  }
-  return { rgba, pxWidth, pxHeight };
+async function cropCell(row, col) {
+  const { data, info } = await sharp(SPRITE_SHEET)
+    .extract({ left: col * CELL, top: row * CELL, width: CELL, height: CELL })
+    .resize(OUTPUT_SIZE, OUTPUT_SIZE)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return { rgba: new Uint8Array(data.buffer, data.byteOffset, data.length), width: info.width, height: info.height };
 }
 
-function renderKoi(snapshot, outputDir) {
+async function renderKoi(snapshot, outputDir) {
   const bodyColor = getLanguageColor(snapshot.topLanguage);
-  const scale = scaleForContributions(snapshot.totalContributions);
+  const row = nearestRow(hexToRgb(bodyColor));
+  const col = growthColumn(snapshot.totalContributions);
   const delay = delayForActivity(snapshot.todayContributions);
 
-  const frame0 = drawFrame(buildKoiGrid(0), scale, bodyColor);
-  const frame1 = drawFrame(buildKoiGrid(1), scale, bodyColor);
-  const { pxWidth, pxHeight } = frame0;
+  const base = await cropCell(row, col);
+  const bobbed = {
+    ...base,
+    rgba: shiftVertical(base.rgba, base.width, base.height, 3),
+  };
 
   const gif = GIFEncoder();
-  for (const frame of [frame0, frame1, frame0, frame1]) {
+  for (const frame of [base, bobbed, base, bobbed]) {
     const palette = quantize(frame.rgba, 256, { format: "rgba4444" });
     const index = applyPalette(frame.rgba, palette, "rgba4444");
-    gif.writeFrame(index, pxWidth, pxHeight, {
+    gif.writeFrame(index, frame.width, frame.height, {
       palette,
       delay,
       transparent: true,
-      transparentIndex: findTransparentIndex(frame.rgba, index, palette),
+      transparentIndex: findTransparentIndex(frame.rgba, index),
     });
   }
   gif.finish();
@@ -96,39 +69,35 @@ function renderKoi(snapshot, outputDir) {
   fs.writeFileSync(gifPath, Buffer.from(gif.bytes()));
 
   const previewPath = path.join(outputDir, "preview.html");
-  fs.writeFileSync(
-    previewPath,
-    previewHtml(snapshot, bodyColor, scale, delay)
-  );
+  fs.writeFileSync(previewPath, previewHtml(snapshot, bodyColor, row, col, delay));
 
-  return { gifPath, previewPath, bodyColor, scale, delay };
+  return { gifPath, previewPath, bodyColor, row, col, delay };
 }
 
-function findTransparentIndex(rgba, indexed, palette) {
+function findTransparentIndex(rgba, indexed) {
   for (let p = 0; p < rgba.length; p += 4) {
-    if (rgba[p + 3] === 0) {
-      return indexed[p / 4];
-    }
+    if (rgba[p + 3] === 0) return indexed[p / 4];
   }
   return -1;
 }
 
-function previewHtml(snapshot, bodyColor, scale, delay) {
+function previewHtml(snapshot, bodyColor, row, col, delay) {
   return `<!doctype html>
 <html>
   <head><meta charset="utf-8"><title>Taarun-Koi preview</title></head>
   <body style="font-family: sans-serif; background: #0d1117; color: #e6edf3; padding: 2rem;">
     <h1>Taarun-Koi</h1>
-    <img src="koi.gif" width="${scale * WIDTH}" alt="koi preview" />
+    <img src="koi.gif" width="${OUTPUT_SIZE}" alt="koi preview" />
     <ul>
       <li>Account: ${snapshot.login}</li>
       <li>Total contributions: ${snapshot.totalContributions}</li>
       <li>Today's contributions: ${snapshot.todayContributions}</li>
-      <li>Top language: ${snapshot.topLanguage || "none"} (${bodyColor})</li>
+      <li>Top language: ${snapshot.topLanguage || "none"} (${bodyColor}) -> sprite row ${row}</li>
+      <li>Growth stage: column ${col}</li>
       <li>Frame delay: ${delay}ms</li>
     </ul>
   </body>
 </html>`;
 }
 
-module.exports = { renderKoi, scaleForContributions, delayForActivity };
+module.exports = { renderKoi, delayForActivity };

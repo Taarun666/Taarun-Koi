@@ -15,7 +15,7 @@ async function main() {
   }
 
   const snapshot = await collectAccountSnapshot(login);
-  const result = renderKoi(snapshot, outputDir);
+  const result = await renderKoi(snapshot, outputDir);
 
   console.log(
     `Drew ${login}'s koi: ${snapshot.totalContributions} contributions, ` +
