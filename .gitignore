@@ -1,4 +1,4 @@
-node_modules/
-koi/
-out/
-.DS_Store
+/target/
+/CLAUDE.md
+/AGENTS.md
+/library/

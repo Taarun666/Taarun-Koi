@@ -1,62 +1,62 @@
 # Taarun-Koi
 
-A GitHub Action that draws a koi fish from a GitHub account's public
-activity, as a looping GIF for a profile README.
+Taarun-Koi draws a pixel-art koi from a GitHub account's public activity. Its
+languages color it, its contributions grow it, its streaks mark it, and the day
+that just ended decides how it swims. A nightly workflow puts the koi on a
+profile README as a looping GIF, and the same tool runs from the command line.
 
-- **Size** grows with the account's total public contributions.
-- **Color** is set by the account's most-used programming language (by bytes
-  across its public, non-fork repositories).
-- **Swim speed** picks up with the day's contribution count.
+This is a fork of [git-koi](https://github.com/yalongwastaken/git-koi) by
+Anthony Yalong, used unmodified under its MIT license — see
+[NOTICE.md](NOTICE.md). It is not published separately on crates.io; the
+`documentation` link below points at the upstream crate's docs, which still
+describe this code.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/yalongwastaken/yalongwastaken/main/koi/koi.gif" width="256" alt="The author's koi, redrawn every night from the day's activity" />
+</p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/bodies-dark.png" />
+  <img src="docs/bodies-light.png" alt="The six bodies, white, black, Asagi, tea, gold, and platinum, at each growth stage" />
+</picture>
+
+## Repository Structure
+
+```text
+.
+├── .github/      workflows, issue forms, and Dependabot
+├── docs/         the getting-started guide and the render sheets
+├── examples/     the profile workflow and the koi library generator
+├── src/          the library and the git-koi command
+├── tests/        the public-boundary tests and their fixtures
+└── action.yml    the GitHub Action
+```
 
 ## Usage
 
-Copy [examples/profile-workflow.yml](examples/profile-workflow.yml) into your
-GitHub profile repository (the one named after your username, e.g.
-`octocat/octocat`) as `.github/workflows/koi.yml`, then embed the GIF in that
-repository's `README.md`:
+### Requirements
 
-```html
-<img src="koi/koi.gif" width="336" alt="My koi" />
-```
+- For a koi on your profile README: a GitHub account. The Action runs in your
+  profile repository's workflow with its built-in token.
+- For the command line: a binary from the
+  [releases page](https://github.com/taarun666/Taarun-Koi/releases), or Rust
+  at or above the `rust-version` in [Cargo.toml](Cargo.toml), plus the
+  [GitHub CLI](https://cli.github.com), authenticated.
+- For the library: Rust at or above that same version.
 
-Run the workflow once from the Actions tab so the first koi appears
-immediately, rather than waiting for the nightly schedule.
+[docs/getting-started.md](docs/getting-started.md) walks through all three: the
+Action in a profile workflow, the command line, and the library. The API is
+documented on [docs.rs](https://docs.rs/git-koi).
 
-### Inputs
+## Author
 
-| Input        | Default               | Meaning                                         |
-| ------------ | ---------------------- | ------------------------------------------------ |
-| `login`      | The repository owner   | Account whose koi to draw                        |
-| `output-dir` | `koi`                  | Folder that receives `koi.gif` and `preview.html` |
-| `token`      | The built-in token     | Token for reading the account's public data       |
+**Anthony Yalong** wrote the original `git-koi`.
 
-## How it works
+- Email: yalong.anthony123@gmail.com
+- GitHub: [@yalongwastaken](https://github.com/yalongwastaken)
 
-`src/collect.js` reads public data through the GitHub CLI (`gh`, preinstalled
-on GitHub-hosted runners): the account's daily contribution calendar, and the
-language byte totals across its public, non-fork repositories.
-`src/render.js` picks the sprite sheet cell whose body color is nearest the
-account's top language and whose column matches its contribution count,
-crops it with [`sharp`](https://www.npmjs.com/package/sharp), and encodes a
-two-frame bobbing loop as a GIF with
-[`gifenc`](https://www.npmjs.com/package/gifenc), timed by the day's
-contribution count.
-
-The koi artwork itself (`assets/bodies-dark.png`) is reused from
-[yalongwastaken/git-koi](https://github.com/yalongwastaken/git-koi) under its
-MIT license — see [NOTICE.md](NOTICE.md). Everything else (the data
-collection, color/growth matching, and animation code) is original.
-
-An example of the source artist's own koi, and the sprite sheet this reuses:
-
-<p align="center">
-  <img src="assets/source-koi-example.gif" width="256" alt="Example koi from yalongwastaken/git-koi" />
-</p>
-<p align="center">
-  <img src="assets/bodies-dark.png" width="600" alt="The bodies-dark.png sprite sheet: six body colors across six growth stages" />
-</p>
+This fork is maintained by **Taarun** ([@taarun666](https://github.com/taarun666)).
 
 ## License
 
-MIT for this repository's own code. See [LICENSE](LICENSE) and, for the
-reused sprite sheet, [NOTICE.md](NOTICE.md).
+MIT, unchanged from upstream. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).

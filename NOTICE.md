@@ -1,8 +1,8 @@
-# Third-party assets
+# Fork notice
 
-`assets/bodies-dark.png` is `docs/bodies-dark.png` from
-[yalongwastaken/git-koi](https://github.com/yalongwastaken/git-koi), used
-unmodified under that project's MIT license:
+Taarun-Koi is a fork of [git-koi](https://github.com/yalongwastaken/git-koi)
+by Anthony Yalong, version 1.0.2, used unmodified in code under its MIT
+license:
 
 ```
 MIT License
@@ -28,14 +28,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-`assets/source-koi-example.gif` is `koi/koi.gif` from
-[yalongwastaken/yalongwastaken](https://github.com/yalongwastaken/yalongwastaken),
-Anthony Yalong's personal GitHub profile repository — shown here as an example
-of git-koi's own output. That repository carries no license file, so unlike
-`bodies-dark.png` above, this specific file is not under an open-source
-license; it is included with attribution to its author, not under a granted
-right to redistribute.
+Changes made in this fork, beyond repository/release wiring needed to host it
+independently (`Cargo.toml`'s `repository`, `action.yml`'s display name, and
+this notice):
 
-Everything else in this repository (the collection, color-matching, growth,
-and animation code) is original and covered by this repository's own
-[LICENSE](LICENSE).
+- None yet. The library, CLI, and Action behave identically to upstream.
+
+This repository's own `LICENSE` file is the original, unmodified MIT license
+text above — the copyright holder of the code it covers remains Anthony
+Yalong, as MIT requires.
